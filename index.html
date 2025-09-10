@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Acesso Protegido</title>
+</head>
+<body>
+  <h2>Digite a senha para abrir o PDF</h2>
+  <input type="password" id="senha">
+  <button onclick="abrirPDF()">Acessar</button>
+
+  <script>
+    function abrirPDF() {
+      const senha = document.getElementById("senha").value;
+      if (senha === "1234") { // senha definida
+        window.open("relatorio.pdf", "_blank"); // abre direto o PDF
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+  </script>
+</body>
+</html>
