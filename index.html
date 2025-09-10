@@ -1,23 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Acesso Protegido</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Relatório</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .pdf-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #333;
+            z-index: 1000;
+        }
+
+        .pdf-header {
+            background: #222;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h2>Digite a senha para abrir o PDF</h2>
-  <input type="password" id="senha">
-  <button onclick="abrirPDF()">Acessar</button>
+    <div class="container" id="loginContainer">
+        <div class="logo">🔒 Relatório Protegido</div>
+        <div class="subtitle">Digite a senha para acessar o relatório</div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="btn">Acessar Relatório</button>
+            
+            <div class="error-message" id="errorMessage">
+                Senha incorreta. Tente novamente.
+            </div>
+        </form>
+    </div>
 
-  <script>
-    function abrirPDF() {
-      const senha = document.getElementById("senha").value;
-      if (senha === "1234") { // senha definida
-        window.open("relatorio.pdf", "_blank"); // abre direto o PDF
-      } else {
-        alert("Senha incorreta!");
-      }
-    }
-  </script>
+    <div class="pdf-container" id="pdfContainer">
+        <div class="pdf-header">
+            <h3>Relatório</h3>
+            <button class="close-btn" onclick="closePDF()">Fechar</button>
+        </div>
+        <iframe class="pdf-viewer" id="pdfViewer"></iframe>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURAÇÃO DA SENHA
+        // Para alterar a senha, modifique apenas a linha abaixo:
+        const SENHA_CORRETA = "123456";
+        // ========================================
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const senhaDigitada = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (senhaDigitada === SENHA_CORRETA) {
+                // Senha correta - mostrar PDF
+                mostrarPDF();
+            } else {
+                // Senha incorreta - mostrar erro
+                errorMessage.style.display = 'block';
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+                
+                // Esconder mensagem de erro após 3 segundos
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        function mostrarPDF() {
+            const loginContainer = document.getElementById('loginContainer');
+            const pdfContainer = document.getElementById('pdfContainer');
+            const pdfViewer = document.getElementById('pdfViewer');
+            
+            // Adicionar timestamp para forçar reload do PDF (cache busting)
+            const timestamp = new Date().getTime();
+            pdfViewer.src = `relatorio.pdf?v=${timestamp}`;
+            
+            // Mostrar PDF e esconder login
+            loginContainer.style.display = 'none';
+            pdfContainer.style.display = 'block';
+        }
+
+        function closePDF() {
+            const loginContainer = document.getElementById('loginContainer');
+            const pdfContainer = document.getElementById('pdfContainer');
+            
+            // Voltar para tela de login
+            pdfContainer.style.display = 'none';
+            loginContainer.style.display = 'block';
+            
+            // Limpar senha
+            document.getElementById('password').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Permitir fechar PDF com tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('pdfContainer').style.display === 'block') {
+                closePDF();
+            }
+        });
+
+        // Focar no campo de senha ao carregar a página
+        window.addEventListener('load', function() {
+            document.getElementById('password').focus();
+        });
+    </script>
 </body>
 </html>
+
